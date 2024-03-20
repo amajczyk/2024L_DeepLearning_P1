@@ -11,10 +11,10 @@ def create_cnn(
     kernel_sizes: Union[list, np.array] = [6, 6],
     num_filters: int = 16,
     filter_stride: int = 1,
-    filter_padding: int = 1,
+    filter_padding: int = 0,
 
     pooling_size: int = 2,
-    pooling_stride: int = 1,
+    pooling_stride: int = 2,
 
     num_fc_layers: int = 2,
     fc_size: int = 10,
@@ -38,7 +38,7 @@ def create_cnn(
     pooling_size (int): The size of the pooling layers.
     pooling_stride (int): The stride for the pooling layers.
 
-    num_fc_layers (int): The number of fully connected layers (hidden).
+    num_fc_layers (int): The number of fully connected layers.
     fc_size (int): The size of the fully connected layers.
     
     image_size (int): The size of the input images (assumed to be square).
@@ -61,6 +61,7 @@ def create_cnn(
             self.conv_layers = nn.ModuleList()
             self.pooling_layers = nn.ModuleList()
             self.relu_layers = nn.ModuleList()
+            self.ReLU = nn.ReLU()
             in_channels = num_input_channels
             for kernel_size in kernel_sizes:
                 self.conv_layers.append(
@@ -100,6 +101,7 @@ def create_cnn(
 
             # Final output layer
             self.output_layer = nn.Linear(fc_size, num_classes)
+            
 
         def forward(self, x):
             # Convolutional layers
@@ -116,6 +118,7 @@ def create_cnn(
             # Fully connected layers
             for fc_layer, dropout_layer  in zip(self.fc_layers, self.dropout_layers):
                 x = fc_layer(x)
+                x = self.ReLU(x)
                 x = dropout_layer(x)
                 
 
