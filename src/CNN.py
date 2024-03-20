@@ -23,6 +23,8 @@ def create_cnn(
     num_input_channels: int = 3,
     num_classes: int = 10,
 
+    dropout_prob: float = 0.1
+
 ):
     """
     Create a CNN with the given architecture.
@@ -42,6 +44,8 @@ def create_cnn(
     image_size (int): The size of the input images (assumed to be square).
     num_input_channels (int): The number of input channels.
     num_classes (int): The number of output classes.
+
+    dropout_prob (float): The dropout probability for the fully connected layers.
 
     Returns:
     CNN: A PyTorch CNN model.
@@ -76,8 +80,8 @@ def create_cnn(
 
             # Fully connected layers
             self.fc_layers = nn.ModuleList()
-            self.fc_relu_layers = nn.ModuleList()
-            
+            self.dropout_layers = nn.ModuleList()  # Dropout layers
+
 
             spatial_dim = image_size
 
@@ -91,7 +95,7 @@ def create_cnn(
 
             for _ in range(num_fc_layers):
                 self.fc_layers.append(nn.Linear(input_size, fc_size))
-                self.fc_relu_layers.append(nn.ReLU())
+                self.dropout_layers.append(nn.Dropout(p=dropout_prob))  # Add dropout layer
                 input_size = fc_size
 
             # Final output layer
@@ -99,30 +103,24 @@ def create_cnn(
 
         def forward(self, x):
             # Convolutional layers
-            # i = 0
             for conv_layer, pooling_layer, relu_layer in zip(
                 self.conv_layers, self.pooling_layers, self.relu_layers
             ):
                 x = conv_layer(x)
                 x = pooling_layer(x)
                 x = relu_layer(x)
-                # print(f'After conv_layer {i+1}: {x.size()}')
-                # i += 1
 
             # Flatten the output for fully connected layers
             x = torch.flatten(x, 1)
 
             # Fully connected layers
-            # i= 0
-            for fc_layer, fc_relu_layer in zip(self.fc_layers, self.fc_relu_layers):
+            for fc_layer, dropout_layer  in zip(self.fc_layers, self.dropout_layers):
                 x = fc_layer(x)
-                x = fc_relu_layer(x)
-                # print(f'After fc_layer {i+1}: {x.size()}')
-                # i += 1
+                x = dropout_layer(x)
+                
 
             # Output layer
             x = self.output_layer(x)
-            # print(f'Output size: {x.size()}')
             return x
 
     return CNN()
