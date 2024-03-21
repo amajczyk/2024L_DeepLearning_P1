@@ -61,6 +61,7 @@ def create_cnn(
             self.conv_layers = nn.ModuleList()
             self.pooling_layers = nn.ModuleList()
             self.relu_layers = nn.ModuleList()
+            self.batch_norm_layers = nn.ModuleList()
             self.ReLU = nn.ReLU()
             in_channels = num_input_channels
             for kernel_size in kernel_sizes:
@@ -73,6 +74,7 @@ def create_cnn(
                         stride=filter_stride,
                     )
                 )
+                self.batch_norm_layers.append(nn.BatchNorm2d(num_filters))
                 self.pooling_layers.append(
                     nn.MaxPool2d(kernel_size=pooling_size, stride=pooling_stride)
                 )
@@ -105,10 +107,11 @@ def create_cnn(
 
         def forward(self, x):
             # Convolutional layers
-            for conv_layer, pooling_layer, relu_layer in zip(
-                self.conv_layers, self.pooling_layers, self.relu_layers
+            for conv_layer, pooling_layer, relu_layer, batch_norm_layer in zip(
+                self.conv_layers, self.pooling_layers, self.relu_layers, self.batch_norm_layers
             ):
                 x = conv_layer(x)
+                x = batch_norm_layer(x)
                 x = pooling_layer(x)
                 x = relu_layer(x)
 
