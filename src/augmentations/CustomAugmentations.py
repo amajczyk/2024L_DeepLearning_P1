@@ -1,4 +1,7 @@
 import albumentations as A
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+import numpy as np
+
 
 class CustomAugmentations:
     '''
@@ -9,8 +12,7 @@ class CustomAugmentations:
     p_dict: dict
         The dictionary containing the probability of each augmentation to be applied
     '''
-    def __init__(self, image, p_dict):
-        self.image = image
+    def __init__(self, p_dict):
         self.p_dict = p_dict
         self.mapping = {
             "flip": A.Flip,
@@ -27,14 +29,6 @@ class CustomAugmentations:
         if not self.__check_p_dict__():
             raise ValueError("The p_dict is not valid. Please check the values")
     
-    def __transform__(self):
-        '''
-        This method is used to create the transformation pipeline
-
-        Returns:
-        A.Compose
-            The transformation pipeline
-        '''
         transform = []
         for k, v in self.p_dict.items():
             if v > 0:
@@ -56,7 +50,7 @@ class CustomAugmentations:
                     ], p=v))
                 else:
                     transform.append(self.mapping[k](p=v))
-        return A.Compose(transform)
+        self.transform = A.Compose(transform)
     
     def __check_p_dict__(self):
         '''
