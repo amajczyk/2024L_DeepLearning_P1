@@ -1,77 +1,60 @@
-import albumentations as A
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
+import tensorflow as tf
 import numpy as np
 
-
-class CustomAugmentations:
+class CustomAugmentationsTF:
     '''
-    This class is used to apply custom augmentations to the images using the albumentations library
+    This class is used to apply custom augmentations to the images using TensorFlow
     Parameters:
-    image: np.ndarray
-        The image to be augmented
     p_dict: dict
         The dictionary containing the probability of each augmentation to be applied
     '''
     def __init__(self, p_dict):
         self.p_dict = p_dict
-        self.mapping = {
-            "flip": A.Flip,
-            "transpose": A.Transpose,
-            "gauss_noise": A.GaussNoise,
-            "blur": A.OneOf,
-            "shift_scale_rotate": A.ShiftScaleRotate,
-            "distortion": A.OneOf,
-            "brightness_contrast": A.OneOf,
-            "hue_saturation_value": A.HueSaturationValue,
-            "perspective": A.Perspective,
-            "rotate": A.Rotate
-        }
-        if not self.__check_p_dict__():
-            raise ValueError("The p_dict is not valid. Please check the values")
     
-        transform = []
-        for k, v in self.p_dict.items():
-            if v > 0:
-                if k == "blur":
-                    transform.append(self.mapping[k]([
-                        A.MotionBlur(p=1),
-                        A.MedianBlur(blur_limit=3, p=1),
-                        A.Blur(blur_limit=3, p=1)
-                    ], p=v))
-                elif k == "distortion":
-                    transform.append(self.mapping[k]([
-                        A.OpticalDistortion(p=1),
-                        A.GridDistortion(p=1)
-                    ], p=v))
-                elif k == "brightness_contrast":
-                    transform.append(self.mapping[k]([
-                        A.CLAHE(clip_limit=2, p=1),
-                        A.RandomBrightnessContrast(p=1)
-                    ], p=v))
-                else:
-                    transform.append(self.mapping[k](p=v))
-        self.transform = A.Compose(transform)
-    
-    def __check_p_dict__(self):
-        '''
-        This method is used to check if the p_dict is valid
-
-        Returns:
-        bool
-            True if the p_dict is valid, False otherwise
-        '''
-        for k, v in self.p_dict.items():
-            if v < 0 or v > 1 or k not in self.mapping.keys():
-                return False
-        return True
-    
-    def augment(self):
+    def augment(self, image):
         '''
         This method is used to apply the augmentations to the image
 
         Returns:
-        np.ndarray
+        tf.Tensor
             The augmented image
         '''
-        transform = self.__transform__()
-        return transform(image=self.image)['image']
+        for k, v in self.p_dict.items():
+            if v > 0:
+                image = self.apply_augmentation(image, k, v)
+        return image
+
+    def apply_augmentation(self, image, augmentation, probability):
+        '''
+        This method applies a specific augmentation to the image
+
+        Parameters:
+        image: tf.Tensor
+            The input image
+        augmentation: str
+            The name of the augmentation to apply
+        probability: float
+            The probability of applying the augmentation
+
+        Returns:
+        tf.Tensor
+            The augmented image
+        '''
+        random_number = np.random.uniform(0, 1)
+        if augmentation == "flip":
+            return tf.image.flip_left_right(image) if random_number < probability else image
+        elif augmentation == "transpose":
+            return tf.image.transpose(image) if random_number < probability else image
+        elif augmentation == "gauss_noise":
+            noise = tf.random.normal(tf.shape(image), stddev=0.1)
+            return image + noise if random_number < probability else image
+        elif augmentation == "brightness_contrast":
+            return tf.cond(random_number < probability,
+                           lambda: tf.image.random_brightness(tf.image.random_contrast(image, 0.2, 0.5), 0.2),
+                           lambda: image)
+        elif augmentation == "hue_saturation_value":
+            return tf.cond(random_number < probability,
+                           lambda: tf.image.random_hue(tf.image.random_saturation(tf.image.random_brightness(image, 0.2), 0.2, 0.5), 0.2),
+                           lambda: image)
+        else:
+            return image
