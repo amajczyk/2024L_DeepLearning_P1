@@ -40,7 +40,8 @@ class CustomAugmentationsTF:
         tf.Tensor
             The augmented image
         '''
-        random_number = np.random.uniform(0, 1)
+        random_number = tf.convert_to_tensor(np.random.uniform(0, 1), dtype=tf.float32)  # Convert numpy array to TensorFlow tensor
+        
         if augmentation == "flip":
             return tf.image.flip_left_right(image) if random_number < probability else image
         elif augmentation == "transpose":
