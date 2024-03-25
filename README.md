@@ -33,7 +33,7 @@ Files in main directory:
 
 - **efficientLarge_keras_no_aug.ipynb**: Jupyter Notebook with the pipeline for training EfficientNetV2 model without augmentations
 
-- **ensemble_predictor.ipynb**: Jupyter Notebook with the ensamble predictor composed of the committee of several CNNs
+- **ensemble_predictor.ipynb**: Jupyter Notebook with the ensamble predictor composed of the committee of several CNNs (NOTE: there, already trained models are referenced - it requires, that they are avaiable in `.h5` files - not uploaded as they are too large)
 
 - **resnet_keras_aug.ipynb**: Jupyter Notebook with the pipeline for training Resnet50 model with augmentations (Flip, Gaussian Noise and Flip-Gaussian Noise combination) - 50 epochs training per iteration
 
